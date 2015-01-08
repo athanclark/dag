@@ -73,7 +73,7 @@ Here might be a way to define graphs:
 data Dag Available where
   GNil :: Dag All
   GCons :: (from,to) :satisfies: c =>
-           Edge (from::Sym) (to::Sym)
+           (from::Sym) :edge: (to::Sym)
         -> Dag c
         -> Dag (a :into: c))
 ```
@@ -84,4 +84,19 @@ Where `Edge` is a data type, `Sym` is the promoted type (used as a kind) of the 
 
 Lastly, `:into:` is like a `Cons` for our incremental type checker / enforcement system.
 
+Also, `to` and `from` are our singleton values
+
 ##### Rendering
+
+We need to fold over the graph's edge listing, adding each entry to an accumulator of (untyped) spanning trees. I say "untyped" because we've already done the acyclicity and duplication checks from our static type - this tree will now be vulnerable.
+
+We then do recursive, single-time, bredth-first `get`'s on the Graph. This means, we first design our graph intuitively, drawing edges _toward_ dependencies. Then, we flip all edges and take the top-level spainning rose trees, where each set of children are just parsed linearly, and if the child hasen't already been appended to the list, then we're good. Then, the resulting list will have the most distant nodes at the head of the list.
+
+```haskell
+graphToList :: Dag c -> [Sym]
+graphToList GNil = []
+graphToList (GCons ) -- ...TODO.
+
+dependenciesFirst :: Dag c -> [Sym]
+dependenciesFirst = graphToList . flipEdges
+```
