@@ -19,6 +19,7 @@ We also bring the following notions:
 
 - The graph is statically generated from a finite symbol set, and immutable
 - Collapsation of the graph to a list should be very simple.
+- The Graph is __Concrete__ - meaning it's not higher kinded. We expect use of this graph to be only in rendered-form, where using the graph for arbitrary types means you render the graph into a list of symbol values, then map a function that pattern matches on the value cases to give the real value you want.
 
 ## Overview
 
@@ -66,11 +67,11 @@ So, the type reflects the value structure in the kind `Nat`, which is useful for
 
 ##### Usage
 
-Here might be a definition for our graph:
+Here might be a way to define graphs:
 
 ```haskell
-data Dag Available x where
-  GNil :: Dag All a
+data Dag Available where
+  GNil :: Dag All
   GCons :: ( (from,to) :satisfies: c
            , Edge (from::Sym) (to::Sym) ~ a
            ) => a
