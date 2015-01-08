@@ -13,6 +13,7 @@ Our DAG will establish and sustain the following properties:
 - The graph may be disjoint
 - The graph may be empty
 - Edges must be unique
+- A finite, flat symbol set will denote nodes uniquely (a `*` kinded data type without any composite values - we inspect via Template Haskell)
 
 We also bring the following notions:
 
@@ -62,3 +63,23 @@ foo = SS (SS SZ)
 ```
 
 So, the type reflects the value structure in the kind `Nat`, which is useful for phantom types and type families / operators. However, we can promote functions that operate on these types with singletons, and make their mirrored values as well.
+
+##### Usage
+
+Here might be a definition for our graph:
+
+```haskell
+data Dag Available x where
+  GNil :: Dag All a
+  GCons :: ( (from,to) :satisfies: c
+           , Edge (from::Sym) (to::Sym) ~ a
+           ) => a
+             -> Dag c
+             -> Dag (a :into: c))
+```
+
+Where `Edge` is a data type, `Sym` is the promoted type (used as a kind) of the finite symbol set denoting the unique nodes. We use a (directed) product in the left-hand-side of the type family / operator `:satisfies:` to denote that the proposed `Edge` will be allowed in the context `c`. That's where the `Available` comes in - as the memory for how we've built the graph so far.
+
+> I _think_ in production, this will just be a dictionary table that gets recursively elements eliminated based on their transitive relations. I _really_ want it to be correct for each discrete addition, though, as alluded to earler.
+
+Lastly, `:into:` is like a `Cons` for our incremental type checker / enforcement system.
