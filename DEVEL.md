@@ -43,9 +43,11 @@ Singletons gives us a mirror image of the value level, at the type level. For in
 ```haskell
 {-# LANGUAGE DataKinds #-}
 
+module Foo where
+
 data Nat = Z | S Nat
 
-genSingletons ''Nat
+genSingletons [''Nat]
 ```
 
 Now we can do this:
@@ -53,6 +55,10 @@ Now we can do this:
 ```haskell
 {-# LANGUAGE KindSignatures #-}
 
+import Foo
+
 foo :: (S::Nat) ((S::Nat) (Z::Nat))
 foo = SS (SS SZ)
 ```
+
+So, the type reflects the value structure in the kind `Nat`, which is useful for phantom types and type families / operators. However, we can promote functions that operate on these types with singletons, and make their mirrored values as well.
