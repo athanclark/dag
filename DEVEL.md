@@ -72,11 +72,10 @@ Here might be a way to define graphs:
 ```haskell
 data Dag Available where
   GNil :: Dag All
-  GCons :: ( (from,to) :satisfies: c
-           , Edge (from::Sym) (to::Sym) ~ a
-           ) => a
-             -> Dag c
-             -> Dag (a :into: c))
+  GCons :: (from,to) :satisfies: c =>
+           Edge (from::Sym) (to::Sym)
+        -> Dag c
+        -> Dag (a :into: c))
 ```
 
 Where `Edge` is a data type, `Sym` is the promoted type (used as a kind) of the finite symbol set denoting the unique nodes. We use a (directed) product in the left-hand-side of the type family / operator `:satisfies:` to denote that the proposed `Edge` will be allowed in the context `c`. That's where the `Available` comes in - as the memory for how we've built the graph so far.
@@ -84,3 +83,5 @@ Where `Edge` is a data type, `Sym` is the promoted type (used as a kind) of the 
 > I _think_ in production, this will just be a dictionary table that gets recursively elements eliminated based on their transitive relations. I _really_ want it to be correct for each discrete addition, though, as alluded to earler.
 
 Lastly, `:into:` is like a `Cons` for our incremental type checker / enforcement system.
+
+##### Rendering
