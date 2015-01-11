@@ -4,8 +4,8 @@ Author:                 Athan Clark <athan.clark@gmail.com>
 Maintainer:             Athan Clark <athan.clark@gmail.com>
 License:                BSD3
 License-File:           LICENSE
--- Synopsis:               
--- Description:            
+-- Synopsis:
+-- Description:
 Cabal-Version:          >= 1.10
 Build-Type:             Simple
 
@@ -16,6 +16,7 @@ Library
   Exposed-Modules:      Data.Graph.DAG
   Other-Modules:        Data.Graph.DAG.Internal
   Build-Depends:        base >= 4 && < 5
+                      , constraints
 
 Test-Suite spec
   Type:                 exitcode-stdio-1.0
@@ -31,4 +32,4 @@ Test-Suite spec
 
 Source-Repository head
   Type:                 git
---  Location:             
+--  Location:
