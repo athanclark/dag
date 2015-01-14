@@ -1,5 +1,7 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE PolyKinds #-}
+{-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeOperators #-}
@@ -10,19 +12,27 @@ module Data.Graph.DAG where
 import Data.Graph.DAG.Internal
 import Data.Constraint
 
-data AllowedEdges = All        -- FIXME
-                  | Except (Edge () ()) AllowedEdges
+-- Dummy type for development
+data Sym = Foo | Bar | Baz | Qux
 
-data Edge from to = Edge from to
+-- | We use promoted symbol values for the @from@ and @to@ type parameters.
+data EdgeValue (from :: Sym) (to :: Sym) = Edge
 
-type family Into a (c :: AllowedEdges) :: AllowedEdges
+-- | We need this for our list of edges.
+data EdgeKind = forall from to. EdgeType from to
 
-type family Satis a (c :: AllowedEdges) :: Constraint
+-- | Simply reject anything that's present in the list, and accept anything that
+-- isnt & stuff.
+type family Acceptable (a :: EdgeKind) (old :: [EdgeKind]) :: Constraint
+type instance Acceptable ('EdgeType 'Foo 'Bar) (('EdgeType 'Baz 'Bar) ': '[]) = ()
+type instance Acceptable ('EdgeType 'Foo 'Bar) (('EdgeType 'Foo 'Bar) ': '[]) = () ~ Bool
 
-data Dag (context :: AllowedEdges) where
-  GNil :: Dag context
-  GCons :: ( Satis (from,to) c
-           , Edge from to ~ a
+-- | @context@ is a list of types with kind @EdgeAgain@.
+data Dag (context :: [EdgeKind]) where
+  GNil :: Dag '[]
+  GCons :: ( Acceptable b old
+           , EdgeValue from to ~ a
+           , EdgeType from to ~ b
            ) => a
-             -> Dag c
-             -> Dag (Into a c)
+             -> Dag old
+             -> Dag (b ': old)
