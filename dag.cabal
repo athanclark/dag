@@ -4,8 +4,9 @@ Author:                 Athan Clark <athan.clark@gmail.com>
 Maintainer:             Athan Clark <athan.clark@gmail.com>
 License:                BSD3
 License-File:           LICENSE
--- Synopsis:
--- Description:
+Synopsis:               Type-safe directed acyclic graphs.
+Description:
+  Woo!
 Cabal-Version:          >= 1.20
 Build-Type:             Simple
 
@@ -14,7 +15,8 @@ Library
   HS-Source-Dirs:       src
   GHC-Options:          -Wall
   Exposed-Modules:      Data.Graph.DAG
-  Other-Modules:        Data.Graph.DAG.Internal
+                        Data.Graph.DAG.Edge
+--  Other-Modules:        Data.Graph.DAG.Edge
   Build-Depends:        base >= 4 && < 5
                       , constraints
 
@@ -32,4 +34,4 @@ Test-Suite spec
 
 Source-Repository head
   Type:                 git
---  Location:
+  Location:             https://github.com/athanclark/dag
