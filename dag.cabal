@@ -1,11 +1,11 @@
 Name:                   dag
-Version:                0.0.0
+Version:                0.0.1
 Author:                 Athan Clark <athan.clark@gmail.com>
 Maintainer:             Athan Clark <athan.clark@gmail.com>
 License:                BSD3
 License-File:           LICENSE
 Synopsis:               Basic type-safe directed acyclic graphs.
--- Description:
+Description:
 Cabal-Version:          >= 1.20
 Build-Type:             Simple
 
@@ -18,7 +18,6 @@ Library
 --  Other-Modules:        Data.Graph.DAG.Edge
   Build-Depends:        base >= 4 && < 5
                       , constraints
-                      , singletons
 
 Test-Suite spec
   Type:                 exitcode-stdio-1.0

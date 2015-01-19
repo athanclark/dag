@@ -103,6 +103,13 @@ data EdgeSchema (edges :: [EdgeKind])
              -> EdgeSchema old oldLoops unique
              -> EdgeSchema (b ': old) c unique
 
+-- | Utility for constructing an @EdgeSchema@ granularly
+unique :: EdgeSchema '[] '[] 'True
+unique = ENil
+
+notUnique :: EdgeSchema '[] '[] 'False
+notUnique = ENil
+
 -- | Trivial rose tree for creating spanning trees
 data Tree a = Node a [Tree a]
 
