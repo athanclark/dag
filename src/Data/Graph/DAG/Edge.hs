@@ -106,17 +106,6 @@ data EdgeSchema (edges :: [EdgeKind])
 -- | Trivial rose tree for creating spanning trees
 data Tree a = Node a [Tree a]
 
--- | Utility for @AddEdge@
-type family AppendIfNotElem (x :: k) (xs :: [k]) :: [k] where
-  AppendIfNotElem a '[] = a ': '[]
-  AppendIfNotElem a (a ': xs) = a ': xs
-  AppendIfNotElem a (b ': xs) = b ': (AppendIfNotElem a xs)
-
--- | For comparing the root node to be the same.
-type family SameRootNode (a :: Tree k) (b :: Tree k) :: Bool where
-  SameRootNode (Node a xs) (Node a ys) = 'True
-  SameRootNode (Node a xs) (Node b ys) = 'False
-
 -- | Adds an empty @c@ tree to the list of trees uniquely
 type family AppendIfNotElemTrees (c :: k) (trees :: [Tree k]) :: [Tree k] where
   AppendIfNotElemTrees c ((Node c xs) ': xss) = (Node c xs) ': xss
@@ -129,14 +118,44 @@ type family AddChildTo (test :: k)
                        (child :: k)
                        (trees :: [Tree k]) :: [Tree k] where
   AddChildTo t c ((Node t xs) ': xss) =
-    (Node t (AppendIfNotElemTrees c xs)) ': xss
+    (Node t (AppendIfNotElemTrees c xs)) ': (AddChildTo t c xss)
   AddChildTo t c ((Node x xs) ': xss) =
     (Node x (AddChildTo t c xs)) ': (AddChildTo t c xss)
   AddChildTo t c '[] = '[]
 
+-- | We need to track if @from@ has is a root node or not. TODO: Some code repeat.
+type family AddEdge' (edge :: EdgeKind)
+                     (trees :: [Tree Symbol])
+                     (hasFromRoot :: Bool)
+                     (hasToRoot :: Bool):: [Tree Symbol] where
+  AddEdge' ('EdgeType from to) '[] 'False 'False =
+    (Node from ((Node to '[]) ': '[])) ': (Node to '[]) ': '[]
+
+  AddEdge' ('EdgeType from to) '[] 'True 'False =
+    (Node to                     '[])  ':                  '[]
+
+  AddEdge' ('EdgeType from to) '[] 'False 'True =
+    (Node from ((Node to '[]) ': '[])) ':                  '[]
+
+  AddEdge' x '[] 'True 'True = '[]
+
+  AddEdge' ('EdgeType from to) ((Node from xs) ': xss) hasFromRoot hasToRoot =
+    (Node from (AppendIfNotElemTrees to xs)) ':
+      (AddEdge' ('EdgeType from to) xss 'True hasToRoot)
+
+  AddEdge' ('EdgeType from to) ((Node to xs) ': xss) hasFromRoot hasToRoot =
+    (Node to (AddEdge' ('EdgeType from to) xs 'True 'True)) ':
+      (AddEdge' ('EdgeType from to) xss hasFromRoot 'True)
+
+  -- | Go downward, and laterally (I think).
+  AddEdge' ('EdgeType from to) ((Node x xs) ': xss) hasFromRoot hasToRoot =
+    (Node x (AddEdge' ('EdgeType from to) xs 'True 'True)) ':
+      (AddEdge' ('EdgeType from to) xss hasFromRoot hasToRoot)
+
 -- | Add @to@ as a child to every @from@ node in the accumulator.
-type family AddEdge (edge :: EdgeKind) (trees :: [Tree Symbol]) where
-  AddEdge ('EdgeType from to) trees = AddChildTo from to trees
+type family AddEdge (edge :: EdgeKind)
+                    (trees :: [Tree Symbol]) :: [Tree Symbol] where
+  AddEdge a trees = AddEdge' a trees 'False 'False
 
 -- | Auxilliary function normally defined in a @where@ clause for manual folding.
 type family SpanningTrees' (edges :: [EdgeKind])
