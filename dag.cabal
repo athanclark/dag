@@ -6,6 +6,54 @@ License:                BSD3
 License-File:           LICENSE
 Synopsis:               Basic type-safe directed acyclic graphs.
 Description:
+  This is a type-safe approach for a directed acyclic graph.
+  .
+  Edge construction is inductive, creating a "schema":
+  .
+  >  import Data.Graph.DAG.Edge
+  >
+  >  -- | Edges are statically defined:
+  >  edges = ECons (Edge :: EdgeValue "foo" "bar") $
+  >    ECons (Edge :: EdgeValue "bar" "baz") $
+  >    ECons (Edge :: EdgeValue "foo" "baz")
+  >    unique -- ENil, but for uniquely edged graphs
+  .
+  Which we use to populate nodes with values:
+  .
+  >  data Cool = AllRight
+  >            | Radical
+  >            | SuperDuper
+  >
+  >  graph = GCons "foo" AllRight $
+  >    GCons "bar" Radical $
+  >    GCons "baz" SuperDuper $
+  >    GNil edges
+  .
+  It's an instance of `Functor`, but we haven't done much here - it will require
+  a lot of reflection that I don't have time to implement right now - there isn't
+  even binding of value-based `GCons` keys and `ECons` edge node labels.
+  .
+  Some type tomfoolery:
+  .
+  >  *Data.Graph.DAG> :t edges
+  >  edges
+  >    :: EdgeSchema
+  >         '['EdgeType "foo" "bar", 'EdgeType "bar" "baz",
+  >           'EdgeType "foo" "baz"] -- Type list of edges
+  >         '['("foo", '["bar", "baz"]), '("bar", '["baz"])] -- potential loops
+  >         'True -- uniqueness
+  .
+  >  *Data.Graph.DAG> :t getSpanningTrees $ edges
+  >  getSpanningTrees $ edges
+  >    :: Data.Proxy.Proxy
+  >         '['Node "foo" '['Node "bar" '['Node "baz" '[]],
+  >                         'Node "baz" '[]],
+  >           'Node "bar" '['Node "baz" '[]],
+  >           'Node "baz" '[]]
+  .
+  This library is still very naive, but it will give us compile-time enforcement
+  of acyclicity (and uniqueness) in these graphs - ideal for dependency graphs.
+
 Cabal-Version:          >= 1.20
 Build-Type:             Simple
 
@@ -15,7 +63,6 @@ Library
   GHC-Options:          -Wall
   Exposed-Modules:      Data.Graph.DAG
                         Data.Graph.DAG.Edge
---  Other-Modules:        Data.Graph.DAG.Edge
   Build-Depends:        base >= 4 && < 5
                       , constraints
 

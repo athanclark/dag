@@ -76,17 +76,17 @@ type family DisallowIn
               (new :: EdgeKind)
               ( oldLoops :: [(Symbol, [Symbol])] )
               (keyFound :: Bool) :: [(Symbol, [Symbol])] where
--- | When `from ~ key`:
+-- When @from ~ key@:
   DisallowIn ('EdgeType from to) ( '(from, xs) ': es) 'False =
     '(from, (to ': xs)) ':                      -- add @to@ to transitive reach list
       (DisallowIn ('EdgeType from to) es 'True) -- continue
--- | When `from ~/~ key`, and `from ~/~ head value`
+-- When @from ~/~ key@, and @from ~/~ head value@
   DisallowIn ('EdgeType from to) ( '(key, vs) ': es ) keyFound =
     '(key, (PrependIfElem from to vs)) ':            -- find the needle if it exists
         (DisallowIn ('EdgeType from to) es keyFound) -- continue
--- | Basis
+-- Basis
   DisallowIn a '[] 'True = '[] -- search over.
--- | Growth via append
+-- Growth via append
   DisallowIn ('EdgeType from to) '[] 'False = ('(from, (to ': '[])) ': '[])
 
 -- | @edges@ is a list of types with kind @EdgeKind@, while @nearLoops@ is a
@@ -154,7 +154,7 @@ type family AddEdge' (edge :: EdgeKind)
     (Node to (AddEdge' ('EdgeType from to) xs 'True 'True)) ':
       (AddEdge' ('EdgeType from to) xss hasFromRoot 'True)
 
-  -- | Go downward, and laterally (I think).
+  -- Go downward, and laterally (I think).
   AddEdge' ('EdgeType from to) ((Node x xs) ': xss) hasFromRoot hasToRoot =
     (Node x (AddEdge' ('EdgeType from to) xs 'True 'True)) ':
       (AddEdge' ('EdgeType from to) xss hasFromRoot hasToRoot)
