@@ -16,6 +16,7 @@ module Data.Graph.DAG.Edge where
 
 import Data.Constraint
 import GHC.TypeLits
+import Data.Proxy
 
 -- | We use promoted symbol values for the @from@ and @to@ type parameters. This
 -- is the user-level data type when declaring the list of edges.
@@ -42,6 +43,10 @@ type family Lookup (index :: k) ( map :: [(k, k2)] ) :: Maybe k2 where
   Lookup a (b ': xs) = Lookup a xs
   Lookup a '[] = 'Nothing
 
+-- | Trivial inequality for non-reflexivity of edges
+type family (x :: k1) =/= (y :: k2) :: Constraint where
+  a =/= a = Deducible 'False
+  a =/= b = Deducible 'True
 
 -- | Simply reject anything that's been reached in the other direction. We
 -- expect an explicit type signature when uniqueness is needed, otherwise we
@@ -49,10 +54,12 @@ type family Lookup (index :: k) ( map :: [(k, k2)] ) :: Maybe k2 where
 class Acceptable (a :: EdgeKind)
                  ( oldLoops :: [(Symbol, [Symbol])] )
                  (unique :: Bool) where
-instance (Excluding from (Lookup to excludeMap)) =>
+instance ( Excluding from (Lookup to excludeMap)
+         , from =/= to ) =>
             Acceptable ('EdgeType from to) excludeMap 'False where
 instance ( Excluding from (Lookup to excludeMap)
-         , Excluding to (Lookup from excludeMap)) =>
+         , Excluding to (Lookup from excludeMap)
+         , from =/= to ) =>
             Acceptable ('EdgeType from to) excludeMap 'True where
 
 -- | Add an explicit element to the head of a list, if the test is inside that
@@ -85,7 +92,7 @@ type family DisallowIn
 -- | @edges@ is a list of types with kind @EdgeKind@, while @nearLoops@ is a
 -- map of the nodes transitively reachable by each node.
 data EdgeSchema (edges :: [EdgeKind])
-                ( nearLoops :: [(Symbol, [Symbol])] )
+                (nearLoops :: [(Symbol, [Symbol])])
                 (unique :: Bool) where
   ENil :: EdgeSchema '[] '[] unique
   ECons :: ( Acceptable b oldLoops unique
@@ -95,3 +102,52 @@ data EdgeSchema (edges :: [EdgeKind])
            ) => !a
              -> EdgeSchema old oldLoops unique
              -> EdgeSchema (b ': old) c unique
+
+-- | Trivial rose tree for creating spanning trees
+data Tree a = Node a [Tree a]
+
+-- | Utility for @AddEdge@
+type family AppendIfNotElem (x :: k) (xs :: [k]) :: [k] where
+  AppendIfNotElem a '[] = a ': '[]
+  AppendIfNotElem a (a ': xs) = a ': xs
+  AppendIfNotElem a (b ': xs) = b ': (AppendIfNotElem a xs)
+
+-- | For comparing the root node to be the same.
+type family SameRootNode (a :: Tree k) (b :: Tree k) :: Bool where
+  SameRootNode (Node a xs) (Node a ys) = 'True
+  SameRootNode (Node a xs) (Node b ys) = 'False
+
+-- | Adds an empty @c@ tree to the list of trees uniquely
+type family AppendIfNotElemTrees (c :: k) (trees :: [Tree k]) :: [Tree k] where
+  AppendIfNotElemTrees c ((Node c xs) ': xss) = (Node c xs) ': xss
+  AppendIfNotElemTrees c ((Node x xs) ': xss) = (Node x xs) ':
+    (AppendIfNotElemTrees c xss)
+  AppendIfNotElemTrees c '[] = (Node c '[]) ': '[]
+
+-- | Adds @c@ as a child of any tree with a root @t@. Assumes unique roots.
+type family AddChildTo (test :: k)
+                       (child :: k)
+                       (trees :: [Tree k]) :: [Tree k] where
+  AddChildTo t c ((Node t xs) ': xss) =
+    (Node t (AppendIfNotElemTrees c xs)) ': xss
+  AddChildTo t c ((Node x xs) ': xss) =
+    (Node x (AddChildTo t c xs)) ': (AddChildTo t c xss)
+  AddChildTo t c '[] = '[]
+
+-- | Add @to@ as a child to every @from@ node in the accumulator.
+type family AddEdge (edge :: EdgeKind) (trees :: [Tree Symbol]) where
+  AddEdge ('EdgeType from to) trees = AddChildTo from to trees
+
+-- | Auxilliary function normally defined in a @where@ clause for manual folding.
+type family SpanningTrees' (edges :: [EdgeKind])
+                           (acc :: [Tree Symbol]) :: [Tree Symbol] where
+  SpanningTrees' '[] trees = trees
+  SpanningTrees' (('EdgeType from to) ': es) trees =
+    SpanningTrees' es (AddEdge ('EdgeType from to) trees)
+
+-- | Expects edges to already be type-safe
+type family SpanningTrees (edges :: [EdgeKind]) :: [Tree Symbol] where
+  SpanningTrees edges = SpanningTrees' edges '[]
+
+getSpanningTrees :: EdgeSchema es x unique -> Proxy (SpanningTrees es)
+getSpanningTrees _ = Proxy
