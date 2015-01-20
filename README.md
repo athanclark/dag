@@ -66,7 +66,7 @@ differs from others in a number of ways:
   ```
 
 This library is still very naive, but it will give us compile-time enforcement
-of acyclicity (and uniqueness) in these graphs - ideal for dependency graphs.
+of acyclicity in these graphs - ideal for dependency graphs.
 
 ## Usage
 
