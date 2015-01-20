@@ -8,7 +8,7 @@ dag
 This is a type-safe directed acyclic graph library for Haskell. This library
 differs from others in a number of ways:
 
-- Edge construction is inductive, creating a "schema":
+- Edge construction is incremental, creating a "schema":
 
   ```haskell
   {-# LANGUAGE DataKinds #-}
@@ -19,10 +19,10 @@ differs from others in a number of ways:
   edges = ECons (Edge :: EdgeValue "foo" "bar") $
     ECons (Edge :: EdgeValue "bar" "baz") $
     ECons (Edge :: EdgeValue "foo" "baz")
-    unique -- ENil, but for uniquely edged graphs
+    unique -- ENil, but casted for uniquely edged graphs
   ```
 
-- Which we use to inductively populate nodes with values:
+- The nodes are separate from edges; graph may be not connected:
 
   ```haskell
   data Cool = AllRight
@@ -35,11 +35,7 @@ differs from others in a number of ways:
     GNil edges
   ```
 
-  It's an instance of `Functor`, but we haven't done much here - it will require
-  a lot of reflection that I don't have time to implement right now - there isn't
-  even binding of value-based `GCons` keys and `ECons` edge node labels.
-
-- Lots of type-level computation:
+- Type safety throughout edge construction:
 
   ```haskell
   *Data.Graph.DAG> :t edges
@@ -51,6 +47,8 @@ differs from others in a number of ways:
          'True -- uniqueness
   ```
 
+- Various type-level computation
+
   ```haskell
   *Data.Graph.DAG> :t getSpanningTrees $ edges
   getSpanningTrees $ edges
@@ -59,6 +57,12 @@ differs from others in a number of ways:
                          'Node "baz" '[]],
            'Node "bar" '['Node "baz" '[]],
            'Node "baz" '[]]
+
+  *Data.Graph.DAG> reflect $ getSpanningTrees $ edges
+  [Node "foo" [Node "bar" [Node "baz" []]
+              ,Node "baz" []]
+  ,Node "bar" [Node "baz" []]
+  ,Node "baz" []]
   ```
 
 This library is still very naive, but it will give us compile-time enforcement

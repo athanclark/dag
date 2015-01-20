@@ -25,6 +25,8 @@ $(singletons [d|
   data Tree a = Node a [Tree a] deriving (Show, Eq)
   |])
 
+-- | Gives us a generic way to get our spanning trees of the graph, as a value.
+-- Credit goes to <stackoverflow.com/questions/28030118/reflecting-heterogeneous-promoted-types-back-to-values-compositionally András Kovács>.
 reflect ::
   forall (a :: k).
   (SingI a, SingKind ('KProxy :: KProxy k)) =>
