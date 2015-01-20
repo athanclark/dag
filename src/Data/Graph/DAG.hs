@@ -14,9 +14,8 @@ import Data.Graph.DAG.Edge
 import Data.Graph.DAG.Edge.Utils
 
 import Data.List (lookup)
-import Control.DeepSeq (force)
 
--- | The graph may be not connected, with dangling nodes, if desired.
+-- | The graph may be not connected
 data DAG es a where
   GNil :: forall es a x unique. EdgeSchema es x unique
        -> DAG es a
@@ -40,6 +39,8 @@ glookup :: String -> DAG es a -> Maybe a
 glookup _ (GNil _) = Nothing
 glookup k (GCons k2 a gs) | k == k2   = Just a
                           | otherwise = glookup k gs
+
+
 {-
 gtree :: String -> DAG es a -> Maybe (Tree a)
 gtree k g = lookup k $ force $ reflect $ getSpanningTrees $ getEdgeSchema g
