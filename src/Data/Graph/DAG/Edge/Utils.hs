@@ -1,19 +1,35 @@
+{-# LANGUAGE GADTs #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE PolyKinds #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE KindSignatures #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Data.Graph.DAG.Edge.Utils where
 
 import Data.Graph.DAG.Edge
 
 import GHC.TypeLits
+import Data.Singletons.TH
+import Data.Singletons.Prelude
 import Data.Proxy
 
 
 -- | Trivial rose tree for creating spanning trees
-data Tree a = Node a [Tree a]
+$(singletons [d|
+  data Tree a = Node a [Tree a] deriving (Show, Eq)
+  |])
+
+reflect ::
+  forall (a :: k).
+  (SingI a, SingKind ('KProxy :: KProxy k)) =>
+  Proxy a -> Demote a
+reflect _ = fromSing (sing :: Sing a)
 
 -- | Adds an empty @c@ tree to the list of trees uniquely
 type family AppendIfNotElemTrees (c :: k) (trees :: [Tree k]) :: [Tree k] where

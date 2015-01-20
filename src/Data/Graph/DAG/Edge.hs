@@ -13,12 +13,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FunctionalDependencies #-}
 
-module Data.Graph.DAG.Edge
-        ( EdgeSchema (..)
-        , EdgeValue (..)
-        , unique
-        , notUnique
-        ) where
+module Data.Graph.DAG.Edge where
 
 import Data.Constraint
 import GHC.TypeLits
@@ -106,7 +101,7 @@ data EdgeSchema (edges :: [EdgeKind])
            , EdgeType from to ~ b
            , DisallowIn b oldLoops 'False ~ c
            ) => !a
-             -> EdgeSchema old oldLoops unique
+             -> !(EdgeSchema old oldLoops unique)
              -> EdgeSchema (b ': old) c unique
 
 -- | Utility for constructing an @EdgeSchema@ granularly

@@ -63,8 +63,10 @@ Library
   GHC-Options:          -Wall
   Exposed-Modules:      Data.Graph.DAG
                         Data.Graph.DAG.Edge
+                        Data.Graph.DAG.Edge.Utils
   Build-Depends:        base >= 4 && < 5
                       , constraints
+                      , singletons
 
 Test-Suite spec
   Type:                 exitcode-stdio-1.0
