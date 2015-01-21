@@ -2,6 +2,7 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE PolyKinds #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE TemplateHaskell #-}
@@ -18,12 +19,29 @@ import GHC.TypeLits
 import Data.Singletons.TH
 import Data.Singletons.Prelude
 import Data.Proxy
+import Data.Monoid
+import Control.Applicative
 
-
--- | Trivial rose tree for creating spanning trees
+-- | Trivial rose tree for creating spanning trees. We make control structure
+-- instances "parallel" (instead of cartesian) by default for simplicity.
 $(singletons [d|
-  data Tree a = Node a [Tree a] deriving (Show, Eq)
+  data Tree a = Node a [Tree a] deriving (Show, Eq, Functor)
   |])
+
+instance Applicative Tree where
+  pure a = Node a []
+  (Node f fs) <*> (Node x xs) = Node (f x) $
+    zipWith (<*>) fs xs
+
+instance Monad Tree where
+  return = pure
+  (Node x xs) >>= f = case f x of -- Substitution based instance.
+    (Node y ys) -> Node y $ fmap (>>= f) xs
+
+instance Monoid a => Monoid (Tree a) where
+  mempty = Node mempty []
+  (Node x xs) `mappend` (Node y ys) = Node (x `mappend` y) $
+    zipWith mappend xs ys
 
 -- | Gives us a generic way to get our spanning trees of the graph, as a value.
 -- Credit goes to <stackoverflow.com/questions/28030118/reflecting-heterogeneous-promoted-types-back-to-values-compositionally András Kovács>.

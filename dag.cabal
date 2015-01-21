@@ -61,7 +61,7 @@ Description:
   This library is still very naive, but it will give us compile-time enforcement
   of acyclicity (and uniqueness) in these graphs - ideal for dependency graphs.
 
-Cabal-Version:          >= 1.20
+Cabal-Version:          >= 1.10
 Build-Type:             Simple
 
 Library
@@ -71,7 +71,7 @@ Library
   Exposed-Modules:      Data.Graph.DAG
                         Data.Graph.DAG.Edge
                         Data.Graph.DAG.Edge.Utils
-  Build-Depends:        base >= 4 && < 5
+  Build-Depends:        base >= 4.7 && < 5
                       , constraints
                       , singletons
 
