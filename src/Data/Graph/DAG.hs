@@ -27,10 +27,12 @@ instance Functor (DAG es) where
   fmap f (GCons k x xs) = GCons k (f x) $
     fmap f xs
 
+{-
 -- | Convenience function.
 -- getEdgeSchema :: DAG es
 getEdgeSchema (GNil e) = e
 getEdgeSchema (GCons _ _ gs) = getEdgeSchema gs
+-}
 
 -- | A simple @Data.Map.lookup@ duplicate.
 glookup :: String -> DAG es a -> Maybe a
