@@ -7,50 +7,46 @@
 module Data.Graph.DAG
         ( module Data.Graph.DAG.Edge
         , module Data.Graph.DAG.Edge.Utils
+        , module Data.Graph.DAG.Node
         , DAG (..)
         , glookup
         ) where
 
 import Data.Graph.DAG.Edge
 import Data.Graph.DAG.Edge.Utils
+import Data.Graph.DAG.Node
 
 import Data.List (lookup)
 import Data.Singletons
 import Data.Proxy
 
--- | The graph may be not connected
-data DAG es a = forall x unique. GNil (EdgeSchema es x unique)
-              | GCons String a (DAG es a)
+-- | A (potentially sparse) directed acyclic graph, composed of edges and nodes.
+data DAG es x u a = DAG (EdgeSchema es x u)
+                        (NodeSchema a)
 
-instance Functor (DAG es) where
-  fmap f (GNil e) = GNil e
-  fmap f (GCons k x xs) = GCons k (f x) $
-    fmap f xs
+instance Functor (DAG es x u) where
+  fmap f (DAG es xs) = DAG es $ fmap f xs
 
-{-
--- | Convenience function.
--- getEdgeSchema :: DAG es
-getEdgeSchema (GNil e) = e
-getEdgeSchema (GCons _ _ gs) = getEdgeSchema gs
--}
+-- | Convenience function for extracting the edges of a graph.
+getEdgeSchema :: DAG es x u a -> EdgeSchema es x u
+getEdgeSchema (DAG es _) = es
 
--- | A simple @Data.Map.lookup@ duplicate.
-glookup :: String -> DAG es a -> Maybe a
-glookup _ (GNil _) = Nothing
-glookup k (GCons k2 a gs) | k == k2   = Just a
-                          | otherwise = glookup k gs
+-- | Likewise for nodes (just a simple map).
+getNodeSchema :: DAG es x u a -> NodeSchema a
+getNodeSchema (DAG _ xs) = xs
 
--- | Get the spanning trees of an @EdgeSchema@. Operate on the assumtion that
--- the data returned is actually @[Tree String]@.
-espanningtrees :: SingI (SpanningTrees' es '[]) =>
-                  EdgeSchema es x unique
-               -> Demote (SpanningTrees' es '[])
-espanningtrees = reflect . getSpanningTrees
+-- | @Data.Map.lookup@ duplicate.
+glookup :: String -> DAG es x u a -> Maybe a
+glookup k (DAG _ xs) = nlookup k xs
 
--- gspanningtrees
+-- | Spanning trees of a graph.
+gspanningtrees :: SingI (SpanningTrees' es '[]) =>
+                  DAG es x u a -> [Tree (Maybe a)]
+gspanningtrees g = fmap replace $ espanningtrees $ getEdgeSchema g
+  where
+  replace = fmap $ flip glookup g
 
-
-{-
-gtree :: String -> DAG es a -> Maybe (Tree a)
-gtree k g = lookup k $ force $ reflect $ getSpanningTrees $ getEdgeSchema g
--}
+-- | Spanning tree of a particular node. "A possible tree of possible results"
+gtree :: SingI (SpanningTrees' es '[]) =>
+         String -> DAG es x unique a -> Maybe (Tree (Maybe a))
+gtree k g = fmap (fmap $ flip glookup g) $ etree k $ getEdgeSchema g

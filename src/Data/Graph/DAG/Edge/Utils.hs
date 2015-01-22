@@ -20,6 +20,7 @@ import Data.Singletons.TH
 import Data.Singletons.Prelude
 import Data.Proxy
 import Data.Monoid
+import Data.Foldable as F
 import Control.Applicative
 
 -- | Trivial rose tree for creating spanning trees. We make control structure
@@ -43,8 +44,11 @@ instance Monoid a => Monoid (Tree a) where
   (Node x xs) `mappend` (Node y ys) = Node (x `mappend` y) $
     zipWith mappend xs ys
 
+instance Foldable Tree where
+  foldMap f (Node x xs) = f x <> foldMap (foldMap f) xs
+
 -- | Gives us a generic way to get our spanning trees of the graph, as a value.
--- Credit goes to <stackoverflow.com/questions/28030118/reflecting-heterogeneous-promoted-types-back-to-values-compositionally András Kovács>.
+-- Credit goes to <http://stackoverflow.com/questions/28030118/reflecting-heterogeneous-promoted-types-back-to-values-compositionally András Kovács>.
 reflect ::
   forall (a :: k).
   (SingI a, SingKind ('KProxy :: KProxy k)) =>
@@ -115,3 +119,30 @@ type family SpanningTrees (edges :: [EdgeKind]) :: [Tree Symbol] where
 
 getSpanningTrees :: EdgeSchema es x unique -> Proxy (SpanningTrees es)
 getSpanningTrees _ = Proxy
+
+-- | Get the spanning trees of an @EdgeSchema@. Operate on the assumtion that
+-- the data returned is actually @[Tree String]@.
+espanningtrees :: SingI (SpanningTrees' es '[]) =>
+                  EdgeSchema es x unique
+               -> Demote (SpanningTrees' es '[])
+espanningtrees = reflect . getSpanningTrees
+
+-- | Get a single tree.
+etree :: SingI (SpanningTrees' es '[]) =>
+         String -> EdgeSchema es x unique -> Maybe (Tree String)
+etree k es = getTree k $ espanningtrees es
+  where
+  getTree k1 ( n@(Node k2 xs) : ns ) | k1 == k2 = Just n
+                                     | otherwise = getTree k1 ns
+  getTree _ [] = Nothing
+
+-- | Degenerate (but type-safe!) @head@.
+ehead :: ( EdgeType from to ~ b
+         , EdgeValue from to ~ a
+         ) => EdgeSchema (b ': old) c u -> a
+ehead _ = Edge
+
+-- edges e = 
+
+
+-- eflip e = espanningtrees e

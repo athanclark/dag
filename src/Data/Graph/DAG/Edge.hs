@@ -76,15 +76,15 @@ type family PrependIfElem (test :: k) (a :: k) (xs :: [k]) :: [k] where
 type family DisallowIn
               (new :: EdgeKind)
               ( oldLoops :: [(Symbol, [Symbol])] )
-              (keyFound :: Bool) :: [(Symbol, [Symbol])] where
+              (keyFoundYet :: Bool) :: [(Symbol, [Symbol])] where
 -- When @from ~ key@:
   DisallowIn ('EdgeType from to) ( '(from, xs) ': es) 'False =
     '(from, (to ': xs)) ':                      -- add @to@ to transitive reach list
       (DisallowIn ('EdgeType from to) es 'True) -- continue
 -- When @from ~/~ key@, and @from ~/~ head value@
-  DisallowIn ('EdgeType from to) ( '(key, vs) ': es ) keyFound =
+  DisallowIn ('EdgeType from to) ( '(key, vs) ': es ) keyFoundYet =
     '(key, (PrependIfElem from to vs)) ':            -- find the needle if it exists
-        (DisallowIn ('EdgeType from to) es keyFound) -- continue
+        (DisallowIn ('EdgeType from to) es keyFoundYet) -- continue
 -- Basis
   DisallowIn a '[] 'True = '[] -- search over.
 -- Growth via append
@@ -104,7 +104,8 @@ data EdgeSchema (edges :: [EdgeKind])
              -> !(EdgeSchema old oldLoops unique)
              -> EdgeSchema (b ': old) c unique
 
--- | Utility for constructing an @EdgeSchema@ granularly
+-- | Utility for constructing an @EdgeSchema@ incrementally without a type
+-- signature.
 unique :: EdgeSchema '[] '[] 'True
 unique = ENil
 

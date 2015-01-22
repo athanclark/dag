@@ -60,6 +60,11 @@ Description:
   .
   This library is still very naive, but it will give us compile-time enforcement
   of acyclicity (and uniqueness) in these graphs - ideal for dependency graphs.
+  .
+  The main deficiency of this graph is that our @EdgeSchema@ can't be
+  /deconstructed/ soundly - there is just too much information loss between the
+  value and type levels. This means we can't delete edges, but we can still
+  add them.
 
 Cabal-Version:          >= 1.10
 Build-Type:             Simple
