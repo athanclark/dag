@@ -1,3 +1,4 @@
+[![Stories in Ready](https://badge.waffle.io/athanclark/dag.png?label=ready&title=Ready)](https://waffle.io/athanclark/dag)
 dag
 ===
 
