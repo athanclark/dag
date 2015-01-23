@@ -1,5 +1,5 @@
 Name:                   dag
-Version:                0.1.0.1
+Version:                0.1.0.2
 Author:                 Athan Clark <athan.clark@gmail.com>
 Maintainer:             Athan Clark <athan.clark@gmail.com>
 License:                BSD3
@@ -94,6 +94,7 @@ Library
   Exposed-Modules:      Data.Graph.DAG
                         Data.Graph.DAG.Edge
                         Data.Graph.DAG.Edge.Utils
+                        Data.Graph.DAG.Node
   Build-Depends:        base >= 4.7 && < 5
                       , constraints
                       , singletons
