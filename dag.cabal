@@ -1,5 +1,5 @@
 Name:                   dag
-Version:                0.1
+Version:                0.1.0.1
 Author:                 Athan Clark <athan.clark@gmail.com>
 Maintainer:             Athan Clark <athan.clark@gmail.com>
 License:                BSD3
@@ -25,11 +25,11 @@ Description:
   >            | Radical
   >            | SuperDuper
   >
-  >  graph =
-  >    GCons "foo" AllRight $
-  >    GCons "bar" Radical $
-  >    GCons "baz" SuperDuper $
-  >    GNil edges
+  >  nodes =
+  >    nadd "foo" AllRight $
+  >    nadd "bar" Radical $
+  >    nadd "baz" SuperDuper $
+  >    nempty
   .
   Some type tomfoolery:
   .
@@ -63,15 +63,6 @@ Description:
   >  *Data.Graph.DAG> fcEdges edges
   >
   >    [("foo","bar"),("foo","baz"),("bar","baz")]
-  .
-  Node construction is done with a uniquely keyed (inductive) map:
-  .
-  >  data Cool = AllRight | Radical | SuperDuper deriving (Show, Eq)
-  >  nodes =
-  >    nadd "foo" AllRight $
-  >    nadd "bar" Radical $
-  >    nadd "baz" SuperDuper $
-  >    nempty
   .
   Note that a @NodeSchema@'s keys don't have to be in-sync with it's paired
   @EdgeSchema@. After we have both, we can construct a @DAG@:
