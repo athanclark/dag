@@ -1,4 +1,11 @@
-module Data.Graph.DAG.Node where
+module Data.Graph.DAG.Node
+        ( NodeSchema
+        , nlookup
+        , nremove
+        , ncombine
+        , nadd
+        , nempty
+        ) where
 
 import Data.Monoid
 
@@ -32,12 +39,15 @@ nremove _ GNil = GNil
 nremove k1 (GCons k2 x xs) | k1 == k2 = xs
                            | otherwise = nremove k1 xs
 
--- | Overwrite a node to a collection of nodes. In theory, because we don't
--- export @GCons@, uniqueness is garunteed through the constructive use of this
--- function, therefore recursing down after an overwrite is unnecessary.
+-- | Uniquely append, or overwrite a node to a collection of nodes.
 nadd :: String -> a -> NodeSchema a -> NodeSchema a
-nadd _ _ GNil = GNil
+nadd k a GNil = GCons k a GNil
 nadd k1 a (GCons k2 x xs) | k1 == k2 = GCons k1 a xs
+                          | otherwise = GCons k2 x $ nadd k1 a xs
+
+-- | Smart constructor for @GNil@.
+nempty :: NodeSchema a
+nempty = GNil
 
 instance Monoid (NodeSchema a) where
   mempty = GNil

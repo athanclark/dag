@@ -1,10 +1,10 @@
 Name:                   dag
-Version:                0.0.2.1
+Version:                0.1
 Author:                 Athan Clark <athan.clark@gmail.com>
 Maintainer:             Athan Clark <athan.clark@gmail.com>
 License:                BSD3
 License-File:           LICENSE
-Synopsis:               Basic type-safe directed acyclic graphs.
+Synopsis:               Compile-time, type-safe directed acyclic graphs.
 Description:
   This is a type-safe approach for a directed acyclic graph.
   .
@@ -46,10 +46,10 @@ Description:
   >
   >  getSpanningTrees $ edges
   >    :: Data.Proxy.Proxy
-  >         '['Node "foo" '['Node "bar" '['Node "baz" '[]],
-  >                         'Node "baz" '[]],
-  >           'Node "bar" '['Node "baz" '[]],
-  >           'Node "baz" '[]]
+  >         '['Node "foo" '['Node "bar" '['Node "baz" '[]]
+  >                        ,'Node "baz" '[]]
+  >          ,'Node "bar" '['Node "baz" '[]]
+  >          ,'Node "baz" '[]]
   >
   >  *Data.Graph.DAG> reflect $ getSpanningTrees $ edges
   >
@@ -58,13 +58,40 @@ Description:
   >    ,Node "bar" [Node "baz" []]
   >    ,Node "baz" []]
   .
+  We can also look at the edges, first-class:
+  .
+  >  *Data.Graph.DAG> fcEdges edges
+  >
+  >    [("foo","bar"),("foo","baz"),("bar","baz")]
+  .
+  Node construction is done with a uniquely keyed (inductive) map:
+  .
+  >  data Cool = AllRight | Radical | SuperDuper deriving (Show, Eq)
+  >  nodes =
+  >    nadd "foo" AllRight $
+  >    nadd "bar" Radical $
+  >    nadd "baz" SuperDuper $
+  >    nempty
+  .
+  Note that a @NodeSchema@'s keys don't have to be in-sync with it's paired
+  @EdgeSchema@. After we have both, we can construct a @DAG@:
+  .
+  >  graph = DAG edges nodes
+  .
+  Now we can do fun things, like get the spanning tree of a node:
+  .
+  >  *Data.Graph.DAG> gtree "foo" graph
+  >
+  >    Just (AllRight :@-> [Radical :@-> [SuperDuper :@-> []]
+  >                        ,SuperDuper :@-> []])
+  .
   This library is still very naive, but it will give us compile-time enforcement
   of acyclicity (and uniqueness) in these graphs - ideal for dependency graphs.
   .
   The main deficiency of this graph is that our @EdgeSchema@ can't be
   /deconstructed/ soundly - there is just too much information loss between the
-  value and type levels. This means we can't delete edges, but we can still
-  add them.
+  value and type levels. This means we can't delete edges or look inside, but we
+  can still add edges or work with the resulting structure.
 
 Cabal-Version:          >= 1.10
 Build-Type:             Simple

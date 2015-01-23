@@ -1,1 +1,0 @@
-- rigid, skolem
